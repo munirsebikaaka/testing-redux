@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { deleteExpense, newExpense } from "../services/expenseSlice";
 import { useGetConvertedQuery } from "../services/convertAmountSlice";
+import "../styles/expense.css";
 
 const ExpenseTracker = () => {
   const [amount, setAmount] = useState("");
@@ -9,17 +10,18 @@ const ExpenseTracker = () => {
   const [title, setTitle] = useState("");
   const [isSorted, setIsSorted] = useState(false);
   const [isConverted, setConvert] = useState(false);
+  const [error, setError] = useState(false);
 
   const dispatch = useDispatch();
   const { expenseArray } = useSelector((store) => store.expenses);
-  const { data, error, isLoading } = useGetConvertedQuery();
+  const { data } = useGetConvertedQuery();
 
   const eurRate = data?.rates?.EUR;
 
   const onSubmitHandler = (e) => {
     e.preventDefault();
-    if (!amount || !title) return;
-    dispatch(newExpense(amount, title, des));
+    if (!amount || !title) return setError("Some inputs are empty..!");
+    dispatch(newExpense(Number(amount), title, des));
     setAmount("");
     setDes("");
     setTitle("");
@@ -47,8 +49,6 @@ const ExpenseTracker = () => {
       ? (calulateTotalExpenses() * eurRate).toFixed(2)
       : calulateTotalExpenses();
 
-  console.log(convertedAmount);
-
   const displayArray = isSorted
     ? [...expenseArray].sort((a, b) => b.amount - a.amount)
     : expenseArray;
@@ -57,7 +57,9 @@ const ExpenseTracker = () => {
     <div className="tracker-manager">
       <h1 className="tracker-title">Expense Tracker</h1>
 
+      {/* Form */}
       <form onSubmit={onSubmitHandler} className="expense-form">
+        <p className="expense-error">{error}</p>
         <input
           type="number"
           placeholder="Amount"
@@ -84,38 +86,52 @@ const ExpenseTracker = () => {
       </form>
 
       <div className="expense-list">
-        <ul>
-          {displayArray.map((expense) => (
-            <li key={expense.id} className="expense-item">
-              <div>
-                <h2 className="expense-title">{expense.title}</h2>
-                <p className="expense-description">{expense.description}</p>
-                <p className="expense-amount">${expense.amount}</p>
-              </div>
-              <button
-                onClick={() => onDeleteExpense(expense.id)}
-                className="btn btn-danger">
-                Delete
-              </button>
-            </li>
-          ))}
-        </ul>
+        {displayArray.length > 0 && (
+          <table className="expense-table">
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Description</th>
+                <th>Amount (USD)</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {displayArray.map((expense) => (
+                <tr key={expense.id}>
+                  <td>{expense.title}</td>
+                  <td>{expense.description}</td>
+                  <td>${expense.amount}</td>
+                  <td>
+                    <button
+                      onClick={() => onDeleteExpense(expense.id)}
+                      className="btn btn-danger">
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
 
         {expenseArray.length > 0 && (
-          <>
+          <div className="expense-controls">
             <p className="total-expenses">
-              Total Expenses:
+              Total Expenses:{" "}
               {isConverted
                 ? `EURO ${convertedAmount}`
                 : `$ ${calulateTotalExpenses()}`}
             </p>
-            <button onClick={toggleSort} className="btn btn-accent">
-              {isSorted ? "Show Original" : "Sort by Highest"}
-            </button>
-            <button onClick={toggleConvert} className="btn btn-accent">
-              {isConverted ? "Convert USD" : "Convert EURO"}
-            </button>
-          </>
+            <div className="expense-buttons">
+              <button onClick={toggleSort} className="btn btn-accent">
+                {isSorted ? "Show Original" : "Sort by Highest"}
+              </button>
+              <button onClick={toggleConvert} className="btn btn-accent">
+                {isConverted ? "Convert USD" : "Convert EURO"}
+              </button>
+            </div>
+          </div>
         )}
       </div>
     </div>
