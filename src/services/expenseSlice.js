@@ -2,7 +2,7 @@ const initialState = { expenseArray: [] };
 
 export const expenseReducer = (state = initialState, action) => {
   switch (action.type) {
-    case "expense/newExpense":
+    case "expense/add":
       return {
         ...state,
         expenseArray: [
@@ -11,12 +11,12 @@ export const expenseReducer = (state = initialState, action) => {
             amount: +action.payload.amount,
             title: action.payload.title,
             description: action.payload.description,
-            id: Math.floor(Math.random() * 1000),
+            id: Date.now(),
           },
         ],
       };
 
-    case "expense/deleteExpense":
+    case "expense/delete":
       return {
         ...state,
         expenseArray: state.expenseArray.filter(
@@ -31,13 +31,13 @@ export const expenseReducer = (state = initialState, action) => {
 
 export const newExpense = (amount, title, description) => {
   return {
-    type: "expense/newExpense",
+    type: "expense/add",
     payload: { amount, title, description },
   };
 };
 export const deleteExpense = (id) => {
   return {
-    type: "expense/deleteExpense",
+    type: "expense/delete",
     payload: id,
   };
 };
